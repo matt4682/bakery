@@ -1,0 +1,22 @@
+{
+  "ingredients": {
+  "html" : "*.php",
+    "php"  : "include",
+    "css"  : "css",
+    "js"   : "js"
+  },
+
+  "utensils": {
+    "htmlminify" : "utensils/htmlcompressor-1.5.3.jar -o build/%i --compress-js --compress-css %i",
+    "phpcompile" : "C:\xampp\php\php.exe %i > build/%n.html",
+    "cssminify"  : "utensils/yuicompressor-1.5.3.jar -o build/css/%i %i",
+    "jsminify"   : "utensils/yuicompressor-1.5.3.jar -o build/js/%i %i"
+  },
+   
+  "instructions": [
+    {"run" : "phpcompile", "on":"php"},
+    {"run" : "phpcompile", "on":"html"},
+    {"run" : "cssminify",  "on":"css"},
+    {"run" : "jsminify",   "on":"js"}
+  ]
+}
