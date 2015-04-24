@@ -203,9 +203,9 @@ int main(int argc, char *argv[]) {
         process.start("cmd /c" + run);
       #endif
 
-     #ifndef Q_OS_WIN
-       process.start("$SHELL -c" + run);
-     #endif
+      #ifndef Q_OS_WIN
+        process.start("$SHELL -c" + run);
+      #endif
 
       while (process.waitForFinished())
         qApp->processEvents();
