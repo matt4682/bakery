@@ -9,6 +9,8 @@
 #include <QTextStream>
 #include <QDir>
 #include <QProcess>
+#include <QTranslator>
+#include <QLibraryInfo>
 
 #include "./app.h"
 
@@ -30,7 +32,9 @@ CommandLineParseResult parseCommandLine(QCommandLineParser *parser,
                                         QString *error_message) {
   const QCommandLineOption helpOption = parser->addHelpOption();
   const QCommandLineOption versionOption = parser->addVersionOption();
-  parser->addPositionalArgument("recipe", qApp->tr("JSON recipe file to use"));
+  parser->addPositionalArgument("recipe",
+                                QCoreApplication::tr(
+                                    "JSON recipe file to use"));
 
   if (!parser->parse(QCoreApplication::arguments())) {
     *error_message = parser->errorText();
@@ -46,7 +50,7 @@ CommandLineParseResult parseCommandLine(QCommandLineParser *parser,
   const QStringList args = parser->positionalArguments();
 
   if (args.isEmpty()) {
-    *error_message = "Argument 'recipe' missing.";
+    *error_message = QCoreApplication::tr("Argument 'recipe' missing.");
     return CommandLineError;
   }
 
@@ -77,6 +81,15 @@ int main(int argc, char *argv[]) {
 
   parser.setApplicationDescription(VER_FILEDESCRIPTION_STR);
 
+  QTranslator qtTranslator;
+  qtTranslator.load("qt_" + QLocale::system().name(),
+          QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+  app.installTranslator(&qtTranslator);
+
+  QTranslator myappTranslator;
+  myappTranslator.load(VER_PRODUCTNAME_STR + QString("_") + QLocale::system().name());
+  app.installTranslator(&myappTranslator);
+
   QString error_message;
   QString recipe_file;
   switch (parseCommandLine(&parser, &recipe_file, &error_message)) {
@@ -99,7 +112,8 @@ int main(int argc, char *argv[]) {
   QJsonDocument recipe = loadRecipe(recipe_file);
 
   if (!recipe.isObject()) {
-    const QString err = qApp->tr("Invalid JSON obect define by %1. Aborting.")
+    const QString err =
+            QCoreApplication::tr("Invalid JSON obect define by %1. Aborting.")
                         .arg(recipe_file);
     fputs(qPrintable(err), stderr);
     return InvalidJSON;
@@ -109,21 +123,24 @@ int main(int argc, char *argv[]) {
 
   if (!recipe_object.contains("ingredients") ||
       !recipe_object.value("ingredients").isObject()) {
-    const QString err = qApp->tr("Missing ingredient object. Aborting.");
+    const QString err =
+            QCoreApplication::tr("Missing ingredient object. Aborting.");
     fputs(qPrintable(err), stderr);
     return MissingObject;
   }
 
   if (!recipe_object.contains("utensils") ||
       !recipe_object.value("utensils").isObject()) {
-    const QString err = qApp->tr("Missing utensils object. Aborting.");
+    const QString err =
+            QCoreApplication::tr("Missing utensils object. Aborting.");
     fputs(qPrintable(err), stderr);
     return MissingObject;
   }
 
   if (!recipe_object.contains("instructions") ||
       !recipe_object.value("instructions").isArray()) {
-    const QString err = qApp->tr("Missing in instructions array. Aborting.");
+    const QString err =
+            QCoreApplication::tr("Missing in instructions array. Aborting.");
     fputs(qPrintable(err), stderr);
     return MissingArray;
   }
@@ -133,7 +150,7 @@ int main(int argc, char *argv[]) {
   QJsonArray  instructions = recipe_object.value("instructions").toArray();
 
   const QString invalid_instruction =
-      qApp->tr("Instuction %1 is invalid. Skipping");
+      QCoreApplication::tr("Instuction %1 is invalid. Skipping");
 
   for (int i = 0; i < instructions.count(); i++) {
     if (!instructions.at(i).isObject()) {
@@ -159,14 +176,16 @@ int main(int argc, char *argv[]) {
 
     if (!utensils.contains(utensil)) {
       const QString error =
-          qApp->tr("Missing utensil %1. Skipping current instruction");
+          QCoreApplication::tr(
+                  "Missing utensil %1. Skipping current instruction");
       fputs(qPrintable(error.arg(utensil)), stderr);
       continue;
     }
 
     if (!ingredients.contains(ingredient)) {
       const QString error =
-          qApp->tr("Missing ingredient %1. Skipping current instruction");
+          QCoreApplication::tr(
+                  "Missing ingredient %1. Skipping current instruction");
       fputs(qPrintable(error.arg(ingredient)), stderr);
       continue;
     }
@@ -181,7 +200,7 @@ int main(int argc, char *argv[]) {
     } else {
       if (!files.cd(target)) {
         // NOLINTNEXTLINE
-        const QString error = qApp->tr("Missing directory %1. required for ingredient %2. Skipping current instruction");
+        const QString error = QCoreApplication::tr("Missing directory %1. required for ingredient %2. Skipping current instruction");
         fputs(qPrintable(error.arg(target).arg(ingredient)), stderr);
         continue;
       }
@@ -210,7 +229,7 @@ int main(int argc, char *argv[]) {
       while (process.waitForFinished())
         qApp->processEvents();
 
-      const QString result = qApp->tr("Instruction: %1 \r\n%2");
+      const QString result = QCoreApplication::tr("Instruction: %1 \r\n%2");
       QString process_log = QString(process.readAll());
 
       fputs(qPrintable(result.arg(run).arg(process_log)), stdout);
